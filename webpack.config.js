@@ -1,67 +1,74 @@
-var debug             = process.env.NODE_ENV !== "production";
-var webpack           = require('webpack');
+var path = require('path');
+var webpack = require('webpack');
 var HtmlWebpackPlugin = require('html-webpack-plugin');
-var path              = require('path');
-var babelrc           = require('./.babelrc');
+var CleanWebpackPlugin = require('clean-webpack-plugin');
 
 module.exports = {
-    context: __dirname,
-    entry: './src/entry.js',
-    output: {
-        path: __dirname + '/dist',
-        filename: 'bundle.js'
+    context: path.resolve(__dirname, './src'),
+    entry: [
+        'babel-polyfill',
+        path.join(__dirname, './src/index.js')
+    ],
+    devtool: 'inline-source-map',
+    devServer: {
+        contentBase: path.join(__dirname, 'dist'),
+        publicPath: '/',
+        compress: true,
+        port: 9000,
+        hot: true
     },
-
-    module: {
-        loaders: [{
-            test: /\.js[x]?$/,
-            exclude: /(node_modules|bower_components)/,
-            loaders: ['babel-loader?presets[]=es2015&presets[]=react'],
-        }, {
-            test: /\.css$/,
-            loaders: ['style-loader', 'css-loader']
-        }, {
-            test: /\.scss$/,
-            loaders: ['style-loader', 'css-loader', 'sass-loader']
-        }, {
-            test: /\.woff$/,
-            loader: "url-loader?prefix=font/&limit=5000"
-        }, {
-            test: /\.woff2$/,
-            loader: "url-loader?prefix=font/&limit=5000"
-        }, {
-            test: /\.(eot|ttf|svg|gif|png)$/,
-            loader: "file-loader"
-        }, {
-            test: /\.json$/,
-            loader: 'json-loader'
-        }
-        ]
+    output: {
+        filename: 'bundle.js',
+        path: path.resolve(__dirname, 'dist'),
+        publicPath: '/'
     },
     plugins: [
-        new webpack.DefinePlugin({
-            'process.env': {
-                NODE_ENV: JSON.stringify('production')
-            }
-        }),
-        new webpack.optimize.UglifyJsPlugin({
-            compress: { warnings: false },
-            output: { comments: false },
-        }),
         new webpack.optimize.UglifyJsPlugin(),
-        new webpack.ProvidePlugin({
-            $: "jquery",
-            jQuery: "jquery"
-        }),
+        new webpack.HotModuleReplacementPlugin(),
+        new CleanWebpackPlugin(['dist']),
         new HtmlWebpackPlugin({
-            filename: 'index.html',
-            title: 'webpack-ejs-template',
-            template: './src/index-template.ejs'
+            title: 'Hello World!'
         })
     ],
-    devServer: {
-        contentBase: path.join(__dirname, "dist"),
-        compress: true,
-        port: 9000
+    module: {
+        rules: [
+            {
+                test: /\.css$/,
+                exclude: /node_modules/,
+                use: [
+                    'style-loader',
+                    'css-loader'
+                ]
+            },
+            {
+                test: /\.(sass|scss)$/,
+                exclude: /node_modules/,
+                use: [
+                    'style-loader',
+                    'css-loader',
+                    'sass-loader'
+                ]
+            },
+            {
+                test: /\.(png|svg|jpg|gif)$/,
+                exclude: /node_modules/,
+                use: ['file-loader']
+            },
+            {
+                test: /\.(woff|woff2|eot|ttf|otf)$/,
+                exclude: /node_modules/,
+                use: ['file-loader']
+            },
+            {
+                test: /\.js$/,
+                exclude: /node_modules/,
+                use: [{
+                    loader: 'babel-loader',
+                    options: {
+                        presets: ['es2015']
+                    }
+                }]
+            }
+        ]
     }
-}
+};
